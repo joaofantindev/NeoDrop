@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="midnight">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="NeoDrop é um editor de notas Markdown offline-first, com pastas hierárquicas, tags, backlinks e sincronização com arquivos .md de verdade no disco. Zero dependências, zero build.">
+<meta name="author" content="NeoDrop">
+<meta name="theme-color" content="#080b14">
+<meta property="og:type" content="website">
+<meta property="og:title" content="NeoDrop">
+<meta property="og:description" content="Editor de notas Markdown com pastas, tags, backlinks e arquivos .md no disco.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'%3E%3Crect width='128' height='128' rx='28' fill='%23080b14'/%3E%3Cpath d='M34 38h48M34 58h60M34 78h40' stroke='%233b82f6' stroke-width='9' stroke-linecap='round'/%3E%3Ccircle cx='96' cy='86' r='14' fill='%233b82f6'/%3E%3C/svg%3E">
+<title>NeoDrop — editor de notas Markdown</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="app">
+
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 11h11M4 16h7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+      </div>
+      <div class="brand-text">
+        <strong>NeoDrop</strong>
+        <span>markdown notes</span>
+      </div>
+    </div>
+
+    <nav class="nav" id="nav">
+      <span class="nav-label">Menu</span>
+      <button class="nav-item is-active" data-view="notes">
+        <svg viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>Notas</span>
+        <em class="nav-badge" id="nav-count-notes">0</em>
+      </button>
+      <button class="nav-item" data-view="trash">
+        <svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V5h6v2M7 7l1 13h8l1-13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>Lixeira</span>
+        <em class="nav-badge" id="nav-count-trash">0</em>
+      </button>
+      <button class="nav-item" data-view="settings">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 3v2.5M12 18.5V21M4.5 12H2M22 12h-2.5M6.3 6.3 4.6 4.6M19.4 19.4l-1.7-1.7M17.7 6.3l1.7-1.7M4.6 19.4l1.7-1.7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <span>Ajustes</span>
+      </button>
+
+      <span class="nav-label nav-label-row">
+        Pastas
+        <button class="nav-label-btn" data-action="open-notebooks" title="Gerenciar pastas">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 3.5v2M12 18.5v2M3.5 12h2M18.5 12h2M6 6l1.5 1.5M16.5 16.5 18 18M18 6l-1.5 1.5M7.5 16.5 6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+        <button class="nav-label-btn" data-action="new-notebook" title="Nova pasta na raiz">
+          <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+        </button>
+      </span>
+      <div class="tree" id="notebook-tree"></div>
+
+      <span class="nav-label nav-label-row">
+        Tags
+        <button class="nav-label-btn" data-action="clear-tag-filter" title="Limpar filtro de tags">
+          <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+        </button>
+      </span>
+      <div class="tag-filter" id="tag-list"></div>
+    </nav>
+
+    <div class="sidebar-foot">
+      <div class="disk" id="disk-box">
+        <div class="disk-head">
+          <svg viewBox="0 0 24 24"><path d="M3 7h18v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M3 7l2-3h14l2 3" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+          <div class="disk-info">
+            <strong id="disk-name">Sem pasta</strong>
+            <small id="disk-sub">arquivos .md no disco</small>
+          </div>
+        </div>
+        <div class="disk-actions">
+          <button class="btn btn-ghost btn-sm" data-action="pick-folder">Escolher pasta</button>
+          <button class="btn btn-ghost btn-sm" data-action="sync-disk" id="disk-sync" disabled>Sincronizar</button>
+        </div>
+      </div>
+      <div class="clock"><span id="clock-time">--:--:--</span><small id="clock-date">—</small></div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <button class="icon-btn only-mobile" id="btn-menu" aria-label="Menu">
+        <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+      <div class="topbar-title">
+        <h1 id="view-title">Notas</h1>
+        <p id="view-sub">Suas notas em Markdown</p>
+      </div>
+      <div class="topbar-actions">
+        <label class="search">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 16l4.5 4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <input type="search" id="global-search" placeholder="Buscar notas... (/)" autocomplete="off">
+        </label>
+        <button class="btn btn-ghost" data-action="toggle-pin" id="btn-pin" title="Fixar nota">
+          <svg viewBox="0 0 24 24"><path d="M9 4h6l-1 6 4 3v2H6v-2l4-3-1-6z"/><path d="M12 15v5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <span>Fixar</span>
+        </button>
+        <button class="btn btn-primary" data-action="new-note">
+          <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+          <span>Nova nota</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="content" id="content">
+
+      <section class="view" id="view-notes">
+        <div class="notes-layout">
+
+          <section class="panel notes-side">
+            <header class="panel-head">
+              <h2 id="list-title">Notas</h2>
+              <div class="head-actions">
+                <label class="field inline">
+                  <span>Ordenar</span>
+                  <select id="note-sort" class="select">
+                    <option value="updated">Atualizadas</option>
+                    <option value="created">Criadas</option>
+                    <option value="title">Título</option>
+                  </select>
+                </label>
+              </div>
+            </header>
+            <div class="filter-note" id="filter-note"></div>
+            <ul class="note-list" id="note-list"></ul>
+            <footer class="side-foot muted" id="list-count">0 notas</footer>
+          </section>
+
+          <section class="panel notes-editor" id="note-editor">
+            <div class="editor-toolbar" id="editor-toolbar">
+              <div class="toolbar-group">
+                <button class="tool" data-wrap="**" title="Negrito (Ctrl+B)"><b>B</b></button>
+                <button class="tool" data-wrap="*" title="Itálico (Ctrl+I)"><i>I</i></button>
+                <button class="tool" data-wrap="`" title="Código inline (Ctrl+K)">&lt;/&gt;</button>
+                <button class="tool" data-wrap="[[" data-wrap2="]]" title="Link interno [[Nota]]">[[ ]]</button>
+              </div>
+              <span class="sep"></span>
+              <div class="toolbar-group">
+                <button class="tool" data-prefix="- " title="Lista">&bull; Lista</button>
+                <button class="tool" data-prefix="1. " title="Numerada">1.</button>
+                <button class="tool" data-prefix="# " title="Título">H</button>
+                <button class="tool" data-prefix="- [ ] " title="Checklist">☑</button>
+                <button class="tool" data-prefix="&gt; " title="Citação">&rdquo;</button>
+                <button class="tool" data-prefix="```" title="Bloco de código">&lt;/&gt;_</button>
+              </div>
+              <span class="sep"></span>
+              <div class="mode-switch" role="group" aria-label="Modo de visualização">
+                <button class="mode-btn" data-mode="edit">Editar</button>
+                <button class="mode-btn" data-mode="split">Dividir</button>
+                <button class="mode-btn" data-mode="preview">Ver</button>
+              </div>
+              <span class="sep"></span>
+              <div class="toolbar-group">
+                <button class="tool" data-action="note-download" title="Baixar como .md">
+                  <svg viewBox="0 0 24 24"><path d="M12 4v11m0 0l4-4m-4 4l-4-4M4 19h16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+                <button class="tool" data-action="note-trash" title="Mover para a lixeira">
+                  <svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V5h6v2M7 7l1 13h8l1-13" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="note-fields">
+              <div class="field-row">
+                <div class="input-wrap with-icon flex-1">
+                  <svg viewBox="0 0 24 24" class="input-icon"><path d="M4 6h16M4 12h10M4 18h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                  <input type="text" id="note-title" class="note-title-input" placeholder="Título da nota" autocomplete="off">
+                </div>
+                <label class="field inline">
+                  <span>Pasta</span>
+                  <select id="note-notebook" class="select"></select>
+                </label>
+              </div>
+              <div class="note-tags-row" id="note-tags-row"></div>
+            </div>
+
+            <div class="editor-body" id="editor-body" data-mode="split">
+              <div class="editor-input" id="editor-input">
+                <pre class="editor-hl" id="editor-hl" aria-hidden="true"><code></code></pre>
+                <textarea id="note-content" spellcheck="false" placeholder="# Título&#10;&#10;Escreva em Markdown. Use #tag para marcar e [[Nome da nota]] para linkar."></textarea>
+              </div>
+              <div class="editor-preview" id="note-preview" aria-live="polite"></div>
+            </div>
+
+            <section class="backlinks" id="backlinks"></section>
+
+            <div class="editor-foot">
+              <span class="muted" id="note-meta">0 palavras • 0 caracteres</span>
+              <span class="muted" id="note-saved">salvo automaticamente no navegador</span>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section class="view is-hidden" id="view-trash">
+        <section class="panel">
+          <header class="panel-head">
+            <h2>Lixeira</h2>
+            <span class="muted">notas excluídas ficam aqui até você apagar de vez</span>
+            <div class="head-actions">
+              <button class="btn btn-ghost btn-sm" data-action="empty-trash">Esvaziar lixeira</button>
+            </div>
+          </header>
+          <ul class="note-list wide" id="trash-list"></ul>
+        </section>
+      </section>
+
+      <section class="view is-hidden" id="view-settings">
+        <section class="panel">
+          <header class="panel-head"><h2>Temas</h2><span class="muted">clique para aplicar</span></header>
+          <div class="theme-grid" id="theme-grid"></div>
+        </section>
+
+        <div class="grid-2">
+          <section class="panel">
+            <header class="panel-head"><h2>Aparência</h2></header>
+            <div class="settings-list">
+              <div class="setting">
+                <div><strong>Densidade da interface</strong><p class="muted">Espaçamento dos elementos</p></div>
+                <label class="switch"><input type="checkbox" id="opt-compact"><span>Compacto</span></label>
+              </div>
+              <div class="setting">
+                <div><strong>Animações</strong><p class="muted">Transições da interface</p></div>
+                <label class="switch"><input type="checkbox" id="opt-motion" checked><span>Ativar</span></label>
+              </div>
+              <div class="setting">
+                <div><strong>Cor de destaque</strong><p class="muted">Usada em botões, realce e gráficos</p></div>
+                <label class="accent-pick big"><input type="color" id="accent-picker-2" value="#3b82f6"></label>
+                <button class="link" data-action="reset-accent">cor do tema</button>
+              </div>
+              <div class="setting">
+                <div><strong>Fonte</strong><p class="muted">Tipografia da interface</p></div>
+                <select id="opt-font" class="select">
+                  <option value="system">Sistema</option>
+                  <option value="mono">Monoespaçada</option>
+                  <option value="serif">Serifada</option>
+                </select>
+              </div>
+              <div class="setting">
+                <div><strong>Tamanho da fonte do editor</strong><p class="muted">Aplicado no Markdown e no preview</p></div>
+                <input type="range" id="opt-editor-size" min="12" max="22" step="1" value="14">
+                <span class="muted range-val" id="opt-editor-size-val">14px</span>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel">
+            <header class="panel-head"><h2>Pasta no disco</h2></header>
+            <div class="settings-list">
+              <div class="setting">
+                <div><strong>Pasta de notas</strong><p class="muted">Cada nota vira um arquivo <code>.md</code> dentro dela</p></div>
+                <button class="btn btn-ghost btn-sm" data-action="pick-folder">Escolher pasta</button>
+              </div>
+              <div class="setting">
+                <div><strong>Importar .md da pasta</strong><p class="muted">Lê os arquivos existentes e cria notas (frontmatter preserva tags e ids)</p></div>
+                <button class="btn btn-ghost btn-sm" data-action="import-disk">Importar da pasta</button>
+              </div>
+              <div class="setting">
+                <div><strong>Sincronização automática</strong><p class="muted">Grava no disco 1,5s depois da última tecla</p></div>
+                <label class="switch"><input type="checkbox" id="opt-autosync" checked><span>Ativar</span></label>
+              </div>
+              <div class="setting">
+                <div><strong>Desconectar</strong><p class="muted">As notas continuam só no navegador</p></div>
+                <button class="btn btn-ghost btn-sm" data-action="forget-folder">Desconectar</button>
+              </div>
+            </div>
+            <p class="panel-hint muted" id="fs-support"></p>
+          </section>
+        </div>
+
+        <section class="panel">
+          <header class="panel-head"><h2>Dados</h2></header>
+          <div class="settings-list">
+            <div class="setting">
+              <div><strong>Exportar</strong><p class="muted">Baixe pastas, notas e preferências em JSON</p></div>
+              <button class="btn btn-ghost btn-sm" data-action="export">Exportar</button>
+            </div>
+            <div class="setting">
+              <div><strong>Importar</strong><p class="muted">Substitui os dados atuais</p></div>
+              <button class="btn btn-ghost btn-sm" data-action="import">Importar</button>
+            </div>
+            <div class="setting">
+              <div><strong>Restaurar exemplo</strong><p class="muted">Notas de demonstração com pastas, tags e backlinks</p></div>
+              <button class="btn btn-ghost btn-sm" data-action="seed">Carregar exemplo</button>
+            </div>
+            <div class="setting">
+              <div><strong>Limpar tudo</strong><p class="muted">Apaga pastas, notas e preferências</p></div>
+              <button class="btn btn-danger btn-sm" data-action="reset">Apagar tudo</button>
+            </div>
+          </div>
+          <input type="file" id="import-file" accept="application/json" hidden>
+        </section>
+      </section>
+
+    </main>
+
+    <footer class="statusbar">
+      <span id="status-left">Pronto</span>
+      <span class="sep"></span>
+      <span id="status-save">—</span>
+      <span class="sep"></span>
+      <span>Atalhos: <kbd>/</kbd> buscar · <kbd>Ctrl</kbd>+<kbd>N</kbd> nova · <kbd>Ctrl</kbd>+<kbd>S</kbd> gravar · <kbd>Esc</kbd> fechar</span>
+    </footer>
+  </div>
+</div>
+
+<div class="backdrop" id="backdrop"></div>
+
+<div class="modal" id="notebook-modal" role="dialog" aria-modal="true" aria-labelledby="notebook-modal-title">
+  <header class="modal-head">
+    <h2 id="notebook-modal-title">Gerenciar pastas</h2>
+    <button class="icon-btn" data-close aria-label="Fechar">
+      <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+    </button>
+  </header>
+  <div class="modal-body">
+    <p class="modal-hint muted">Cada pasta vira uma subpasta na pasta escolhida no disco. Excluir uma pasta não apaga as notas: elas sobem para a pasta acima.</p>
+
+    <form class="sm-add" id="notebook-add-form">
+      <input type="text" id="notebook-new" placeholder="Nova pasta (ex.: JavaScript)" maxlength="60" autocomplete="off">
+      <button type="submit" class="btn btn-primary">Adicionar</button>
+    </form>
+
+    <ul class="nb-manager" id="notebook-manager"></ul>
+
+    <footer class="modal-foot">
+      <span class="muted sm-foot"><span id="notebook-count">0</span> pastas</span>
+      <button class="btn btn-ghost" data-close>Fechar</button>
+    </footer>
+  </div>
+</div>
+
+<div class="modal" id="confirm-modal" role="dialog" aria-modal="true">
+  <div class="modal-body">
+    <h2 id="confirm-title">Confirmar</h2>
+    <p id="confirm-text" class="muted"></p>
+    <footer class="modal-foot">
+      <button class="btn btn-ghost" data-close>Cancelar</button>
+      <button class="btn btn-danger" id="confirm-ok">Confirmar</button>
+    </footer>
+  </div>
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<script src="js/app.js"></script>
+<script src=".probe-layout.js"></script>
+</body>
+</html>

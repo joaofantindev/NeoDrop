@@ -1,0 +1,40 @@
+# dependências / builds (o projeto não tem nenhum, mas se alguém criar)
+node_modules/
+dist/
+build/
+.vendor/
+vendor/
+
+# caches
+.cache/
+.parcel-cache/
+.vite/
+*.log
+npm-debug.log*
+yarn-error.log*
+
+# ambiente / segredos
+.env
+.env.*
+*.pem
+*.key
+
+# editors / SO
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# arquivos temporários do projeto
+*.tmp
+*.bak
+tmp/
+temp/
+/tmp/
+
+# screenshots locais geradas fora de docs/ (docs/ é versionado de propósito)
+screenshots/
